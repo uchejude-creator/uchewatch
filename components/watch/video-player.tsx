@@ -54,11 +54,11 @@ export function VideoPlayer({
           </div>
         )}
         <div className="reaction-stage" aria-hidden="true">
-          {reactions.map((r, i) => (
+          {reactions.map((r) => (
             <span
               key={r.id}
               className="floating-reaction"
-              style={{ left: `${65 + (i % 5) * 5}%` }}
+              style={{ left: `${12 + (Array.from(r.id).reduce((sum, c) => sum + c.charCodeAt(0), 0) % 74)}%` }}
             >
               {r.emoji}
             </span>

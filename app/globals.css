@@ -2487,3 +2487,21 @@ button:active,
     padding-top: calc(28px + env(safe-area-inset-top));
   }
 }
+
+/* A compact quick row opens into a touch-friendly collection. */
+.reaction-picker { min-width: 0; }
+.reaction-picker .reactions-bar { flex-wrap: wrap; }
+.reaction-picker .reaction-buttons { flex-wrap: wrap; gap: 4px; }
+.reaction-picker .reaction-button { min-width: 44px; min-height: 44px; }
+.reaction-more { display: inline-flex; align-items: center; justify-content: center; color: #e4c9ff; background: #b891df12; border-color: #b891df26; }
+.emoji-collection { margin-top: 8px; padding: 20px; border: 1px solid #d9b0ef24; border-radius: 16px; background: radial-gradient(ellipse at top left, #a5579720, transparent 75%), #111118; }
+.emoji-collection-heading { display: flex; align-items: flex-start; gap: 10px; color: #ebbed8; }
+.emoji-collection-heading svg { margin-top: 3px; flex-shrink: 0; }
+.emoji-collection-heading strong { font-size: 14px; font-weight: 500; }
+.emoji-collection-heading p { margin: 5px 0 0; font-size: 12px; line-height: 1.6; color: #b4a9c0; }
+.emoji-group h3 { margin: 20px 0 8px; font-size: 11px; font-weight: 500; letter-spacing: .08em; color: #bdb0ce; text-transform: uppercase; }
+.emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; }
+.emoji-grid .reaction-button { width: 100%; background: #ffffff03; }
+.reaction-picker .reaction-button:active:not(:disabled) { transform: scale(.9); }
+@media (max-width: 480px) { .emoji-collection { padding: 14px; } }
+@media (prefers-reduced-motion: reduce) { .reaction-picker .reaction-button:active:not(:disabled) { transform: none; } }

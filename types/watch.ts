@@ -33,6 +33,11 @@ export interface Reaction {
   emoji: string;
   user_id: string;
 }
-export const REACTIONS = ["❤️", "😂", "😮", "🔥", "😭"] as const;
+export const REACTION_GROUPS = [
+  { label: "All the love", emojis: ["❤️", "🩷", "💜", "💙", "🩵", "🤍", "🧡", "💛", "💚", "💖", "💕", "💞", "💓", "💗", "💘", "💝", "❤️‍🔥", "💌"] },
+  { label: "Just for you", emojis: ["🥰", "😍", "😘", "😚", "😙", "💋", "🫶", "🤗", "🫂", "🌹", "🌷", "💐", "🦋", "✨"] },
+  { label: "Every little feeling", emojis: ["😂", "🤣", "🥹", "😭", "😮", "🤩", "🔥", "👏", "🙌", "🎉", "🍿", "🥂"] },
+] as const;
+export const REACTIONS: readonly string[] = REACTION_GROUPS.flatMap((group) => [...group.emojis]);
 export type ConnectionState =
   "connecting" | "connected" | "reconnecting" | "offline";

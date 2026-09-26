@@ -1,6 +1,8 @@
 // Isolated browser fixture. This file is never an application route.
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ReactionPicker } from "../components/watch/reaction-picker";
+import type { Reaction } from "../types/watch";
 import { VideoPlayer } from "../components/watch/video-player";
 import { SocialPanel } from "../components/watch/social-panel";
 import { InviteModal } from "../components/watch/invite-modal";
@@ -22,6 +24,7 @@ const initial: WatchRoom = {
   last_action: "pause",
 };
 function Harness() {
+  const [reactions, setReactions] = useState<Reaction[]>([]);
   const [room, setRoom] = useState(initial);
   const [commands, setCommands] = useState(0);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -50,6 +53,7 @@ function Harness() {
   );
   return (
     <main>
+      <ReactionPicker connected onReact={async (emoji) => { setReactions((r) => [...r, {id: crypto.randomUUID(), emoji, user_id:"host"}]); }} />
       <h1>Isolated component test — no live backend</h1>
       <output aria-label="Playback command count">{commands}</output>
       <button
@@ -80,7 +84,7 @@ function Harness() {
               room={room}
               offset={0}
               connected
-              reactions={[]}
+              reactions={reactions}
               onPlayback={playback}
               onCinema={() => {}}
             />

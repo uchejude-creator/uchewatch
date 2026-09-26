@@ -16,13 +16,14 @@ import {
 } from "lucide-react";
 import { Brand } from "@/components/ui/brand";
 import { Modal } from "@/components/ui/modal";
+import { ReactionPicker } from "./reaction-picker";
 import { VideoPlayer } from "./video-player";
 import { SocialPanel } from "./social-panel";
 import { InviteModal } from "./invite-modal";
 import { ChangeVideoModal } from "./change-video-modal";
 import { useRoom } from "@/hooks/use-room";
 import { getSupabase } from "@/lib/supabase/client";
-import { REACTIONS, type WatchRoom as Room } from "@/types/watch";
+import { type WatchRoom as Room } from "@/types/watch";
 export function WatchRoom({
   initialRoom,
   userId,
@@ -169,22 +170,7 @@ export function WatchRoom({
                 </button>
               )}
             </div>
-            <div className="reactions-bar">
-              <span>Some things need no words.</span>
-              <div className="reaction-buttons">
-                {REACTIONS.map((emoji) => (
-                  <button
-                    className="reaction-button"
-                    key={emoji}
-                    aria-label={`Send ${emoji} reaction`}
-                    disabled={!connected}
-                    onClick={() => void state.react(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <ReactionPicker connected={connected} onReact={state.react} />
             {connected && state.people.length < 2 && (
               <div className="waiting-card">
                 <Heart size={23} />

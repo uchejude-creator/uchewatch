@@ -100,3 +100,20 @@ test("Chat preserves failed drafts and invitation dialogs restore focus", async 
     page.getByRole("button", { name: "Open invitation" }),
   ).toBeFocused();
 });
+
+
+test("Love collection sends selected emojis to the player and fits every device width", async ({ page }) => {
+  await page.getByRole("button", {name:"More emojis", exact:true}).click();
+  const collection = page.locator("#emoji-collection");
+  await expect(collection.getByRole("button")).toHaveCount(44);
+  for (const width of [375,430,768,820,1024,1440]) {
+    await page.setViewportSize({width,height:1000});
+    expect(await collection.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+  }
+  await collection.getByRole("button", {name:"Send 💞 reaction", exact:true}).click();
+  await collection.getByRole("button", {name:"Send 💋 reaction", exact:true}).click();
+  const player = page.getByRole("region", {name:"Host player"});
+  await expect(player.locator(".floating-reaction")).toHaveText(["💞", "💋"]);
+  await page.getByRole("button", {name:"Close emoji collection", exact:true}).click();
+  await expect(collection).toHaveCount(0);
+});
