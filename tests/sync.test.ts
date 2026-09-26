@@ -29,6 +29,8 @@ test("Auth callback destinations cannot leave this origin", () => {
   for (const url of [
     "//evil.test",
     "https://evil.test",
+    "/sign-in?next=/sign-in",
+    "/auth/callback",
     "/\\evil.test",
     "/\n/evil.test",
     null,

@@ -1,10 +1,11 @@
 "use client";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Mail, Check, LoaderCircle } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/client";
 import { isConfigured } from "@/lib/supabase/config";
 import { SetupNotice } from "./ui/setup-notice";
+import { authErrorMessage } from "@/lib/auth/errors";
 export function AuthForm({
   next,
   callbackError,
@@ -13,17 +14,29 @@ export function AuthForm({
   callbackError: boolean;
 }) {
   const hydrated = useHydrated();
+  const codesEnabled = process.env.NEXT_PUBLIC_EMAIL_CODES_ENABLED === "true";
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [token, setToken] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = setTimeout(
+      () => setCooldown((n) => Math.max(0, n - 1)),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [cooldown]);
   const [error, setError] = useState(
     callbackError
       ? "That sign-in link has expired or could not be verified. Please request a new one."
       : "",
   );
-  async function submit(e: FormEvent) {
-    e.preventDefault();
+  async function submit(e?: FormEvent) {
+    e?.preventDefault();
+    if (busy || cooldown) return;
     setBusy(true);
     setError("");
     try {
@@ -36,12 +49,30 @@ export function AuthForm({
       });
       if (error) throw error;
       setSent(true);
+      setToken("");
+      setCooldown(60);
     } catch (error) {
-      console.error("Magic link request failed", error);
-      setError(
-        "We couldn’t send your sign-in link. Check your email address and try again in a moment.",
-      );
+      setError(authErrorMessage(error));
+      setCooldown(60);
     } finally {
+      setBusy(false);
+    }
+  }
+  async function verify(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { error } = await getSupabase().auth.verifyOtp({
+        email: email.trim(),
+        token: token.replace(/\s/g, ""),
+        type: "email",
+      });
+      if (error) throw error;
+      location.assign(next);
+    } catch (error) {
+      setError(authErrorMessage(error, true));
       setBusy(false);
     }
   }
@@ -68,18 +99,67 @@ export function AuthForm({
     <>
       {!isConfigured && <SetupNotice />}
       {sent ? (
-        <div className="notice success-notice" role="status">
-          <Check size={22} />
-          <div>
-            <strong>Check your inbox.</strong>
-            <p>
-              We sent a sign-in link to {email}. Open it in this browser to
-              finish signing in.
-            </p>
-            <button className="text-button" onClick={() => setSent(false)}>
-              Use a different email
-            </button>
+        <div>
+          <div className="notice success-notice" role="status">
+            <Check size={22} />
+            <div>
+              <strong>Check your inbox.</strong>
+              <p>
+                We sent a sign-in email to {email}. Open the latest link in this
+                browser to finish signing in.
+                {codesEnabled && " You can also enter the code from your email below."}
+              </p>
+            </div>
           </div>
+          {codesEnabled && <form onSubmit={verify}>
+            <div className="field">
+              <label htmlFor="sign-in-code">Email code</label>
+              <input
+                id="sign-in-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6,10}"
+                maxLength={10}
+                placeholder="Your email code"
+                value={token}
+                onChange={(e) => setToken(e.target.value.replace(/\s/g, ""))}
+                required
+                disabled={busy}
+              />
+            </div>
+            <button
+              className="button button-primary full-width"
+              disabled={busy || !/^[0-9]{6,10}$/.test(token)}
+            >
+              {busy ? "Signing you in…" : "Sign in with code"}
+            </button>
+          </form>}
+          <p className="form-foot">
+            Sign in once and we’ll remember you on this browser. Next time,
+            open UcheWatch directly—there’s no need to reuse the email link.
+          </p>
+          <button
+            type="button"
+            className="text-button"
+            disabled={busy || cooldown > 0}
+            onClick={() => void submit()}
+          >
+            {cooldown
+              ? `Send another email in ${cooldown}s`
+              : "Send a fresh email"}
+          </button>
+          <button
+            type="button"
+            className="text-button"
+            disabled={busy}
+            onClick={() => {
+              setSent(false);
+              setToken("");
+              setError("");
+            }}
+          >
+            Use a different email
+          </button>
         </div>
       ) : (
         <form onSubmit={submit}>
@@ -111,7 +191,7 @@ export function AuthForm({
             />
           </div>
           <button
-            disabled={busy || !isConfigured || !name.trim()}
+            disabled={busy || cooldown > 0 || !isConfigured || !name.trim()}
             className="button button-primary full-width"
           >
             {busy ? (
@@ -119,11 +199,23 @@ export function AuthForm({
             ) : (
               <Mail size={17} />
             )}{" "}
-            Send me a sign-in link <ArrowRight size={17} />
+            {cooldown ? `Try again in ${cooldown}s` : "Send me a sign-in email"}{" "}
+            <ArrowRight size={17} />
           </button>
           <p className="form-foot">
-            No password to remember. Just a little magic.
+            One account. Sign in once and stay signed in on this browser.
           </p>
+          {codesEnabled && <button
+            type="button"
+            className="text-button"
+            disabled={busy || !email.trim() || !isConfigured}
+            onClick={() => {
+              setSent(true);
+              setError("");
+            }}
+          >
+            I already have an email code
+          </button>}
         </form>
       )}
       {error && (

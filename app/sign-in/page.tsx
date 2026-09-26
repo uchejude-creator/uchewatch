@@ -3,6 +3,8 @@ import { Heart } from "lucide-react";
 import { Brand } from "@/components/ui/brand";
 import { AuthForm } from "@/components/auth-form";
 import { safeNext } from "@/lib/watch/youtube-url";
+import { redirect } from "next/navigation";
+import { serverSupabase } from "@/lib/supabase/server";
 export const metadata = { title: "Welcome back" };
 export default async function SignIn({
   searchParams,
@@ -10,6 +12,12 @@ export default async function SignIn({
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const params = await searchParams;
+  const next = safeNext(params.next || null);
+  const supabase = await serverSupabase();
+  if (supabase) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && !user.is_anonymous) redirect(next);
+  }
   return (
     <div className="form-page">
       <Brand />
@@ -21,7 +29,7 @@ export default async function SignIn({
         <h1>Good to have you here.</h1>
         <p>Sign in to make a little space for you and your favorite people.</p>
         <AuthForm
-          next={safeNext(params.next || null)}
+          next={next}
           callbackError={!!params.error}
         />
         <div className="form-foot">

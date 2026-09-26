@@ -48,3 +48,13 @@ After connecting a dedicated Supabase project:
 375, 430, 768, 820, 1024, and 1440 CSS pixels. Verify portrait and landscape, readable chat, no horizontal scrolling, accessible focus order, touch targets, reduced motion, and safe-area behavior.
 
 Physical-device acceptance must include macOS Safari/Chrome, iPad Safari, and iPhone Safari. Emulated Chromium or WebKit checks are helpful but do not certify hardware playback restrictions, native share sheets, AirPlay, or background suspension behavior.
+
+## Login follow-up — 26 September 2026
+
+The authentication fixture passes **8 checks across Chromium and WebKit**: resend cooldown, provider quota feedback, explicit confirmation before token redemption, and persisted login after reload and in a new tab. These tests use the real Supabase browser client with mocked Auth responses; they do not certify live email delivery. Code entry is disabled by default and requires configured email templates.
+
+Signed-in permanent users now skip the sign-in page. Reopening a used callback preserves an existing valid login, and the homepage navigation reflects the browser session. Authentication destinations reject loops back into sign-in/callback routes.
+
+Live inspection found an existing guest session and room in the in-app browser; a guest can view their profile but cannot create rooms. A completed permanent-account email login in this browser has not been independently verified. Resend/SMTP configuration was cancelled by the user and remains unchanged.
+
+Final follow-up run: lint, type checking, 6 unit/database tests, the production build, and all **22 browser checks** passed. The full browser suite includes the requested responsive widths.

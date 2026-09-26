@@ -35,6 +35,7 @@ export function safeNext(value: string | null): string {
   return value &&
     value.startsWith("/") &&
     !value.startsWith("//") &&
+    !/^\/(?:sign-in|auth)(?:[/?#]|$)/.test(value) &&
     !/[\\\r\n]/.test(value)
     ? value
     : "/create";
