@@ -13,6 +13,7 @@ This repository contains the complete application and database migration. A dedi
 - Persistent, server-authoritative play/pause/seek/video state and reconnect snapshots.
 - Private Realtime channels for online presence and ephemeral reactions; RLS-filtered Postgres Changes for playback and chat.
 - Chat with persistent history, message deduplication, and retained drafts on send failure.
+- A shared date-night corner: love bursts, countdown, playlists, secret reveals, games, keepsakes, and a goodnight ritual. See [the feature guide](docs/FUN_FEATURES.md).
 - Cinema mode, collapsible chat, native share sheets, clipboard invitations, waiting/error/loading states.
 - Install metadata, original PNG/SVG icons, safe-area support, reduced motion, and keyboard controls.
 
@@ -43,15 +44,16 @@ npm run test:e2e   # Browser suite; see tests documentation below
 ## Set up your Supabase project
 
 1. Create a **new dedicated project** in Supabase. This implementation does not modify any existing connected project.
-2. In the project SQL Editor, run the complete file:
-   `supabase/migrations/20260925185621_private_watch_rooms.sql`.
-   Run it once on a fresh project. It creates tables, indexes, limited RPCs, RLS policies, private-channel authorization, and publication entries.
+2. In the project SQL Editor, run the migrations in order, once each:
+   `supabase/migrations/20260925185621_private_watch_rooms.sql`, then
+   `supabase/migrations/20260926201951_date_night.sql`.
+   They create tables, indexes, limited RPCs, RLS policies, private-channel authorization, and publication entries. On an existing UcheWatch database apply only migrations not already installed; check migration history before using CLI push (remote installation timestamps can differ).
 3. Keep Data API exposed schemas at their normal defaults (`public`, etc.). **Do not expose the `private` schema.** It contains authorization helpers and rate-limit state. The migration explicitly grants table reads and approved RPC execution to authenticated sessions, including anonymous guest sessions. No direct table writes are granted.
 4. In **Authentication → Sign In / Providers**, enable email and **anonymous sign-ins**. Anonymous Auth is how invited guests receive a real user ID without creating a permanent account. Without it, guests cannot join.
 5. Set the Auth **Site URL** to your deployed HTTPS origin. Add redirect URLs for both `http://localhost:3000/auth/callback` and `https://your-domain/auth/callback`. For a staging deployment add its exact callback URL too. If you change ports, add that port’s URL.
 6. Email links use the originating browser’s PKCE verifier. A successful sign-in persists in cookies and refreshes automatically; returning signed-in users skip the sign-in form. Optional code/confirmation templates are provided but disabled by default: see `docs/EMAIL_SETUP.md`. Supabase’s default email quota still applies.
 7. Optional: enable Google in Supabase Auth, configure its OAuth client and the Supabase-provided callback URL in Google Cloud, then set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`. Leave it false otherwise.
-8. Under Realtime settings, enable private-channel authorization and disable public channel access if available. The app always subscribes with `private: true`. Verify `watch_rooms`, `room_messages`, and `room_participants` are in the `supabase_realtime` publication (the migration adds them).
+8. Under Realtime settings, enable private-channel authorization and disable public channel access if available. Presence/reaction channels use `private: true`; Postgres Changes subscriptions rely on table RLS. Verify `watch_rooms`, `room_messages`, `room_participants`, and `room_fun` are in the `supabase_realtime` publication (the migration adds them).
 9. Copy your project URL and **publishable key** from the project Connect dialog / API settings into `.env.local`. A legacy anon key is also supported. Restart the dev server after changing environment values.
 10. Before a public launch, review Auth rate limits, SMTP delivery, project security advisors, and data retention. Anonymous Auth can be abused to create many identities; the database’s per-user throttles are helpful but are not IP-level abuse prevention. If enabling Supabase CAPTCHA, add a CAPTCHA widget and pass its token to anonymous sign-in first; this version does not include a CAPTCHA widget.
 
@@ -91,6 +93,9 @@ components/landing/   HTML/CSS cinema illustration
 components/ui/        Wordmark, navigation, modal, avatar, configuration state
 components/watch/     Actual player, chat, people, invite and room screens
 hooks/use-room.ts     Supabase subscription, snapshot recovery, chat and reactions
+hooks/use-fun.ts      Shared date-night state, RPCs and reconnect recovery
+components/watch/fun/ Little moments, playlist, games, keepsakes and overlays
+lib/fun/              Date-night types, game prompts and safe ticket export
 hooks/use-synced-player.ts  Provider lifecycle, user controls and drift correction
 lib/supabase/         Cookie-based browser/server clients and configuration
 lib/watch/providers/  Provider-neutral contract and YouTube implementation

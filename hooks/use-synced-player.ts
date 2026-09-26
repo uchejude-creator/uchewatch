@@ -43,7 +43,9 @@ export function useSyncedPlayer(
       ? Math.min(target, p.getDuration())
       : target;
     if (force || Math.abs(p.getCurrentTime() - bounded) > 0.5) p.seek(bounded);
-    if (c.room.is_playing) {
+    const waiting =
+      Date.parse(c.room.playback_updated_at) > Date.now() + c.offset;
+    if (c.room.is_playing && !waiting) {
       if (p.getState() !== "playing") p.play();
     } else p.pause();
     sample.current = { time: p.getCurrentTime(), at: Date.now() };
@@ -92,7 +94,9 @@ export function useSyncedPlayer(
               !readyRef.current ||
               Date.now() < guardUntil.current ||
               pending.current ||
-              !current.current.connected
+              !current.current.connected ||
+              Date.parse(current.current.room.playback_updated_at) >
+                Date.now() + current.current.offset
             )
               return;
             if (
@@ -217,7 +221,20 @@ export function useSyncedPlayer(
   }, [retry, apply, publish]);
   useEffect(() => {
     if (ready && connected) apply();
-  }, [room.revision, ready, connected, apply]);
+    const delay = Date.parse(room.playback_updated_at) - (Date.now() + offset);
+    if (ready && connected && room.is_playing && delay > 0) {
+      const timer = setTimeout(() => apply(true), delay + 25);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    room.revision,
+    room.playback_updated_at,
+    room.is_playing,
+    offset,
+    ready,
+    connected,
+    apply,
+  ]);
   const toggle = () => {
     const p = provider.current;
     if (!p || !ready || !connected) return;

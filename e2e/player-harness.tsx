@@ -53,7 +53,27 @@ function Harness() {
   );
   return (
     <main>
-      <ReactionPicker connected onReact={async (emoji) => { setReactions((r) => [...r, {id: crypto.randomUUID(), emoji, user_id:"host"}]); }} />
+      <ReactionPicker
+        connected
+        onReact={async (emoji) => {
+          setReactions((r) => [
+            ...r,
+            { id: crypto.randomUUID(), emoji, user_id: "host" },
+          ]);
+        }}
+      />
+      <button
+        onClick={() =>
+          setRoom((r) => ({
+            ...r,
+            is_playing: true,
+            playback_updated_at: new Date(Date.now() + 1800).toISOString(),
+            revision: r.revision + 1,
+          }))
+        }
+      >
+        Schedule shared start
+      </button>
       <h1>Isolated component test — no live backend</h1>
       <output aria-label="Playback command count">{commands}</output>
       <button

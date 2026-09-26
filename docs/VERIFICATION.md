@@ -58,3 +58,12 @@ Signed-in permanent users now skip the sign-in page. Reopening a used callback p
 Live inspection found an existing guest session and room in the in-app browser; a guest can view their profile but cannot create rooms. A completed permanent-account email login in this browser has not been independently verified. Resend/SMTP configuration was cancelled by the user and remains unchanged.
 
 Final follow-up run: lint, type checking, 6 unit/database tests, the production build, and all **22 browser checks** passed. The full browser suite includes the requested responsive widths.
+
+## Date-night release — 27 September 2026
+
+- Lint, strict type checking, all **8 unit/database tests**, and the production build passed.
+- Full browser suite: **32 passed** in Chromium and WebKit, including all six requested widths. New checks cover two-page celebrations, secret reveals, goodnight, playlist dedications, and a future authoritative player start without feedback commands.
+- The date-night fixture uses the actual SQL migration and UI, with BroadcastChannel replacing hosted Realtime. It is not an application route and does not certify physical two-device timing.
+- The migration was applied to the dedicated hosted project. Read-only hosted checks confirmed RLS, member SELECT/RPC grants, no direct writes or private-answer reads, no unauthenticated RPC execution, and the Realtime publication entry. A rollback-only hosted action test could not run because the MCP database role cannot execute the authenticated RPC or assume that role; no test rows were committed. Local authenticated-role SQL tests passed.
+- Security advisors were reviewed. Deny-all RLS on private helper tables is intentional, as are member-scoped policies allowing invited anonymous Auth users. See [deny-all policy notice](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy) and [guest policy notice](https://supabase.com/docs/guides/database/database-advisors?queryGroups=lint&lint=0012_auth_allow_anonymous_sign_ins). The pre-existing [password protection warning](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) remains; this app uses email links rather than password login.
+- Physical Mac/iPad playback, native sharing and background suspension are still acceptance checks for the two owners. No paid services were added.

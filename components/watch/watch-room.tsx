@@ -21,6 +21,9 @@ import { VideoPlayer } from "./video-player";
 import { SocialPanel } from "./social-panel";
 import { InviteModal } from "./invite-modal";
 import { ChangeVideoModal } from "./change-video-modal";
+import { useFun } from "@/hooks/use-fun";
+import { FunCorner } from "./fun/fun-corner";
+import { FunOverlays } from "./fun/overlays";
 import { useRoom } from "@/hooks/use-room";
 import { getSupabase } from "@/lib/supabase/client";
 import { type WatchRoom as Room } from "@/types/watch";
@@ -42,6 +45,11 @@ export function WatchRoom({
   const [endError, setEndError] = useState("");
   const connected = state.connection === "connected";
   const host = state.room.host_user_id === userId;
+  const fun = useFun(initialRoom.id, connected);
+  const personName = (id: string) =>
+    fun.state.aliases[id] ||
+    state.people.find((p) => p.user_id === id)?.display_name ||
+    (id === userId ? "You" : "Your person");
   useEffect(() => {
     function key(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -83,7 +91,7 @@ export function WatchRoom({
     );
   return (
     <div
-      className={`room-page ${cinema ? "cinema-mode" : ""} ${chat ? "chat-open" : ""}`}
+      className={`room-page room-mood-${fun.state.mood} ${fun.state.night ? "night-mode" : ""} ${cinema ? "cinema-mode" : ""} ${chat ? "chat-open" : ""}`}
     >
       <header className="room-header">
         <Brand />
@@ -158,6 +166,18 @@ export function WatchRoom({
               reactions={state.reactions}
               onPlayback={state.playback}
               onCinema={() => setCinema(!cinema)}
+              overlay={
+                <FunOverlays
+                  state={fun.state}
+                  offset={state.offset}
+                  name={personName}
+                  startsAt={
+                    state.room.is_playing
+                      ? state.room.playback_updated_at
+                      : undefined
+                  }
+                />
+              }
             />
             <div className="room-video-info">
               <div>
@@ -171,6 +191,18 @@ export function WatchRoom({
               )}
             </div>
             <ReactionPicker connected={connected} onReact={state.react} />
+            <FunCorner
+              state={fun.state}
+              act={fun.act}
+              busy={fun.busy}
+              loaded={fun.loaded}
+              error={fun.error}
+              connected={connected}
+              people={state.people}
+              userId={userId}
+              host={host}
+              name={personName}
+            />
             {connected && state.people.length < 2 && (
               <div className="waiting-card">
                 <Heart size={23} />
@@ -197,8 +229,18 @@ export function WatchRoom({
             </div>
           </div>
           <SocialPanel
-            messages={state.messages}
-            people={state.people}
+            messages={state.messages.map((m) => ({
+              ...m,
+              display_name: fun.state.aliases[m.user_id] || m.display_name,
+            }))}
+            people={state.people.map((p) => ({
+              ...p,
+              display_name:
+                personName(p.user_id) +
+                (fun.state.statuses[p.user_id] === "snacks"
+                  ? " · 🍪 snack break"
+                  : ""),
+            }))}
             userId={userId}
             hostId={state.room.host_user_id}
             connected={connected}

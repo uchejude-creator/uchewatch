@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Maximize, Pause, Play, RotateCcw, Volume2 } from "lucide-react";
 import { useSyncedPlayer } from "@/hooks/use-synced-player";
 import { formatTime } from "@/lib/watch/youtube-url";
@@ -11,6 +11,7 @@ export function VideoPlayer({
   reactions,
   onPlayback,
   onCinema,
+  overlay,
 }: {
   room: WatchRoom;
   offset: number;
@@ -18,6 +19,7 @@ export function VideoPlayer({
   reactions: Reaction[];
   onPlayback: (action: PlaybackAction, position: number) => Promise<WatchRoom>;
   onCinema: () => void;
+  overlay?: ReactNode;
 }) {
   const {
     mountRef,
@@ -53,12 +55,15 @@ export function VideoPlayer({
             </button>
           </div>
         )}
+        {overlay}
         <div className="reaction-stage" aria-hidden="true">
           {reactions.map((r) => (
             <span
               key={r.id}
               className="floating-reaction"
-              style={{ left: `${12 + (Array.from(r.id).reduce((sum, c) => sum + c.charCodeAt(0), 0) % 74)}%` }}
+              style={{
+                left: `${12 + (Array.from(r.id).reduce((sum, c) => sum + c.charCodeAt(0), 0) % 74)}%`,
+              }}
             >
               {r.emoji}
             </span>
