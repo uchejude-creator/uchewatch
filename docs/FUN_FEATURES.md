@@ -9,7 +9,7 @@ Open a room and expand **Our little extras** beneath the video. The existing 44-
 | Little moments | Tap or hold a love burst, send a flying kiss between avatars, float a short love note over the video, choose shared rose/violet/midnight lighting, announce a snack break, and share virtual popcorn. |
 | Ready, baby? | Ask your person to get ready. After both confirm, a server-timed countdown starts the shared video. Tap the video once first if Safari asks to enable playback. |
 | Up next | Add YouTube links to a shared playlist, attach a dedication, hide a surprise pick until reveal, save your special song, or let the host choose a random queued video. The host loads videos paused so both can get ready. |
-| Play together | Secret compliments, pause-and-predict, simultaneous emoji ratings, Would You Rather, This or That, Two Truths and a Lie with mutual guesses, favorite-part reveals, and individual movie-bingo cards. |
+| Play together | Secret compliments, pause-and-predict, simultaneous emoji ratings, Would You Rather, This or That, Two Truths and a Lie with mutual guesses, favorite-part reveals, and Movie Bingo: pause, privately pick a scene description, agree together, and score matching picks. |
 | Keepsakes | Choose room-only pet names, save the current video timestamp with a note, revisit moments, and make a date ticket with an SVG download and a native invitation share sheet/clipboard fallback. |
 | Goodnight | Both write a closing message. They reveal together, playback pauses, and the room lights dim. “Stay a little longer” restores the normal room without ending it. |
 
@@ -34,3 +34,9 @@ Apply `20260926201951_date_night.sql` after the original schema. The new table m
 Automated SQL tests cover authorization, secret answers, host-only changes, countdown, queue, games, tickets and closure. Browser tests exercise actual components and SQL across two fixture pages, but use BroadcastChannel in place of the hosted Realtime transport. See [verification notes](VERIFICATION.md) for exact test boundaries.
 
 Before relying on a date night, run both devices through love burst, ready countdown, a secret reveal, a queued video and goodnight. Physical Safari playback permissions, native sharing and suspension need real-device acceptance.
+
+## Movie Bingo scoring
+
+Movie Bingo replaces the old grid. “Pause & pick” pauses the shared video and starts a round for the selected pair. Both secretly choose Romantic, Funny, Sad, Shocking, or Tense. Once both picks reveal, each accepts a winning description. Only matching acceptances finalize the round; each original pick matching that answer earns one point. Votes can change while players disagree. Skip cancels without points. Totals stay with the room, including across refreshes. Playback stays paused until a participant presses play.
+
+Apply `20260927102144_movie_bingo.sql` after the date-night migration. It replaces the validated action function, reuses private answers and room locks, and calculates points only once per finalized round. Clients cannot supply score totals. Legacy card data is retained for compatibility but the card UI is removed.

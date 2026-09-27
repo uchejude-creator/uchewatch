@@ -140,12 +140,16 @@ test("Secret answers reveal together, then a shared goodnight pauses the room", 
     ).toHaveCount(0);
     await other.getByLabel("Your private answer").fill("You make me smile");
     await other.getByRole("button", { name: "Lock in my answer" }).click();
-    await expect(page.locator(".answer-reveal")).toContainText(
-      "You make me smile",
-    );
-    await expect(other.locator(".answer-reveal")).toContainText(
-      "You light up my evening",
-    );
+    await expect(
+      page
+        .getByRole("region", { name: "Our shared activity" })
+        .locator(".answer-reveal"),
+    ).toContainText("You make me smile");
+    await expect(
+      other
+        .getByRole("region", { name: "Our shared activity" })
+        .locator(".answer-reveal"),
+    ).toContainText("You light up my evening");
     await page.getByRole("button", { name: /Our goodnight Exchange/ }).click();
     await page
       .getByRole("button", { name: "Start our goodnight", exact: true })
@@ -246,9 +250,17 @@ test("Two truths uses three fields and reveals lies only after both guesses", as
         .selectOption("2");
       await submit.click();
       if (index === 0)
-        await expect(other.locator(".answer-reveal")).toHaveCount(0);
+        await expect(
+          other
+            .getByRole("region", { name: "Our shared activity" })
+            .locator(".answer-reveal"),
+        ).toHaveCount(0);
     }
-    await expect(page.locator(".answer-reveal")).toContainText("3. I cook 1");
+    await expect(
+      page
+        .getByRole("region", { name: "Our shared activity" })
+        .locator(".answer-reveal"),
+    ).toContainText("3. I cook 1");
     await page
       .getByRole("button", { name: "Statement 2", exact: true })
       .click();
@@ -261,6 +273,59 @@ test("Two truths uses three fields and reveals lies only after both guesses", as
     await expect(
       page.getByText("Statement 2 was the lie.", { exact: true }),
     ).toHaveCount(2);
+  } finally {
+    await close();
+  }
+});
+
+test("Movie Bingo awards points only after both players agree", async ({
+  page,
+}) => {
+  const { other, close } = await setup(page);
+  try {
+    for (const view of [page, other])
+      await view
+        .getByRole("button", { name: "Play together", exact: true })
+        .click();
+    const a = page.getByRole("region", { name: "Movie Bingo", exact: true });
+    const b = other.getByRole("region", { name: "Movie Bingo", exact: true });
+    await a.getByRole("button", { name: "Pause & pick" }).click();
+    await a.getByRole("button", { name: "Pick 😂 Funny", exact: true }).click();
+    await expect(b.getByLabel("Bingo picks")).toHaveCount(0);
+    await b
+      .getByRole("button", { name: "Pick ❤️ Romantic", exact: true })
+      .click();
+    await a
+      .getByRole("button", { name: "Accept 😂 Funny", exact: true })
+      .click();
+    await b
+      .getByRole("button", { name: "Accept ❤️ Romantic", exact: true })
+      .click();
+    await expect(a.getByLabel("Bingo scoreboard")).not.toContainText("1 point");
+    await b
+      .getByRole("button", { name: "Accept 😂 Funny", exact: true })
+      .click();
+    await expect(a).toContainText("You agreed: Funny");
+    await expect(a.getByLabel("Bingo scoreboard")).toContainText("1 point");
+    await expect(b.getByLabel("Bingo scoreboard")).toContainText("1 point");
+    for (const width of [375, 430, 768, 820, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
+    }
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await a.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `test-results/movie-bingo-${test.info().project.name}.png`,
+    });
+    await a.getByRole("button", { name: "Finish round" }).click();
+    await a.getByRole("button", { name: "Pause & pick" }).click();
+    await b.getByRole("button", { name: "Skip round · no points" }).click();
+    await expect(a.getByRole("button", { name: "Pause & pick" })).toBeVisible();
+    await expect(a.getByLabel("Bingo scoreboard")).toContainText("1 point");
   } finally {
     await close();
   }

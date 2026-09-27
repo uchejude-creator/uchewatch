@@ -1,4 +1,5 @@
 export type RoundKind =
+  | "bingo"
   | "ready"
   | "compliment"
   | "prediction"
@@ -43,6 +44,9 @@ export interface FunRound {
   lies?: Record<string, string>;
   revealed_at?: string;
   starts_at?: string;
+  accepted?: Record<string, string>;
+  winner?: string;
+  scored_at?: string;
 }
 export interface Ticket {
   title: string;
@@ -60,6 +64,7 @@ export interface FunState {
   statuses: Record<string, string>;
   aliases: Record<string, string>;
   bingo: Record<string, string[]>;
+  bingo_scores?: Record<string, number>;
   popcorn: Record<string, number>;
   round?: FunRound | null;
   night?: { at: string; messages: Record<string, string> } | null;

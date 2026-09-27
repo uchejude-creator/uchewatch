@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { ACTIVITIES, BINGO, hasBingo } from "@/lib/fun/catalog";
+import { MovieBingo } from "./movie-bingo";
+import { ACTIVITIES } from "@/lib/fun/catalog";
 import type { FunState, RoundKind } from "@/lib/fun/types";
 import type { RunFun } from "./little-moments";
 export function Games({
@@ -25,7 +26,7 @@ export function Games({
   const mine = round?.users.includes(userId);
   const submitted = round?.submitted.includes(userId);
   const selected = ACTIVITIES.find((a) => a.kind === kind)!;
-  const marked = state.bingo[userId] || [];
+
   return (
     <div className="fun-stack">
       {round?.kind === "ready" && (
@@ -34,7 +35,7 @@ export function Games({
           countdown.
         </p>
       )}
-      {round && (
+      {round && round.kind !== "bingo" && (
         <section className="shared-round" aria-label="Our shared activity">
           <span className="overline">
             {ACTIVITIES.find((a) => a.kind === round.kind)?.title}
@@ -318,7 +319,13 @@ export function Games({
         )}
         <button
           className="button button-primary"
-          disabled={!buddy || !!(round && !round.answers)}
+          disabled={
+            !buddy ||
+            !!(
+              round &&
+              (!round.answers || (round.kind === "bingo" && !round.winner))
+            )
+          }
         >
           Start {selected.title.toLowerCase()}
         </button>
@@ -332,37 +339,13 @@ export function Games({
           visible to this private room.
         </p>
       </form>
-      <section aria-label="Movie bingo">
-        <div className="fun-section-heading">
-          <h3>Movie bingo</h3>
-          <span>
-            {hasBingo(marked) ? "Bingo! 🎉" : `${marked.length}/9 spotted`}
-          </span>
-        </div>
-        <p className="fun-help">
-          Spot a moment? Tap its square. Your person has their own card.
-        </p>
-        <div className="bingo-grid">
-          {BINGO.map((text, i) => (
-            <button
-              type="button"
-              key={text}
-              aria-pressed={marked.includes(String(i))}
-              onClick={() => void run("bingo", { id: String(i) })}
-            >
-              {marked.includes(String(i)) && <span aria-hidden="true">♥ </span>}
-              {text}
-            </button>
-          ))}
-        </div>
-        {Object.entries(state.bingo)
-          .filter(([id]) => id !== userId)
-          .map(([id, card]) => (
-            <p className="fun-help" key={id}>
-              {name(id)}: {card.length}/9 {hasBingo(card) ? "· Bingo! 🎉" : ""}
-            </p>
-          ))}
-      </section>
+      <MovieBingo
+        state={state}
+        userId={userId}
+        buddy={buddy}
+        name={name}
+        run={run}
+      />
     </div>
   );
 }

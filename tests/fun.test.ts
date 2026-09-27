@@ -230,6 +230,58 @@ test("Date-night SQL: membership, simultaneous reveals, countdown, queue, games 
   await as(guest);
   s = await act("truth_guess", { id: s.round!.id, text: "1" });
   assert.equal(s.round!.lies![host], "3");
+  await db.exec("reset role; delete from private.action_limits");
+  await as(host);
+  s = await act("round_start", { kind: "bingo", other: guest, text: "Scene?" });
+  const bingoId = s.round!.id;
+  assert.equal(
+    (
+      await db.query<{ is_playing: boolean }>(
+        "select is_playing from public.watch_rooms where id=$1",
+        [room.id],
+      )
+    ).rows[0].is_playing,
+    false,
+  );
+  await assert.rejects(act("round_answer", { id: bingoId, text: "invalid" }));
+  await assert.rejects(act("bingo_accept", { id: bingoId, text: "Funny" }));
+  s = await act("round_answer", { id: bingoId, text: "Funny" });
+  assert.equal(s.round!.answers, undefined);
+  await as(guest);
+  s = await act("round_answer", { id: bingoId, text: "Romantic" });
+  await assert.rejects(
+    act("round_start", { kind: "compliment", other: host }),
+    /Finish or cancel/,
+  );
+  s = await act("bingo_accept", { id: bingoId, text: "Romantic" });
+  assert.equal(s.bingo_scores, undefined);
+  await as(host);
+  s = await act("bingo_accept", { id: bingoId, text: "Funny" });
+  assert.equal(s.round!.winner, undefined);
+  await as(outsider);
+  await assert.rejects(
+    act("bingo_accept", { id: bingoId, text: "Funny" }),
+    /Room access/,
+  );
+  await as(guest);
+  s = await act("bingo_accept", { id: bingoId, text: "Funny" });
+  assert.equal(s.bingo_scores![host], 1);
+  assert.equal(s.bingo_scores![guest], undefined);
+  await assert.rejects(act("bingo_accept", { id: bingoId, text: "Funny" }));
+  await act("round_cancel");
+  s = await act("round_start", { kind: "bingo", other: host });
+  const nextBingo = s.round!.id;
+  await act("round_answer", { id: nextBingo, text: "Sad" });
+  await as(host);
+  await act("round_answer", { id: nextBingo, text: "Sad" });
+  await act("bingo_accept", { id: nextBingo, text: "Sad" });
+  await as(guest);
+  s = await act("bingo_accept", { id: nextBingo, text: "Sad" });
+  assert.deepEqual(s.bingo_scores, { [host]: 2, [guest]: 1 });
+  s = await act("round_start", { kind: "bingo", other: host });
+  await act("round_answer", { id: s.round!.id, text: "Tense" });
+  s = await act("round_cancel");
+  assert.deepEqual(s.bingo_scores, { [host]: 2, [guest]: 1 });
   s = await act("round_start", {
     kind: "goodnight",
     other: host,

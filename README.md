@@ -46,7 +46,8 @@ npm run test:e2e   # Browser suite; see tests documentation below
 1. Create a **new dedicated project** in Supabase. This implementation does not modify any existing connected project.
 2. In the project SQL Editor, run the migrations in order, once each:
    `supabase/migrations/20260925185621_private_watch_rooms.sql`, then
-   `supabase/migrations/20260926201951_date_night.sql`.
+   `supabase/migrations/20260926201951_date_night.sql`, then
+   `supabase/migrations/20260927102144_movie_bingo.sql`.
    They create tables, indexes, limited RPCs, RLS policies, private-channel authorization, and publication entries. On an existing UcheWatch database apply only migrations not already installed; check migration history before using CLI push (remote installation timestamps can differ).
 3. Keep Data API exposed schemas at their normal defaults (`public`, etc.). **Do not expose the `private` schema.** It contains authorization helpers and rate-limit state. The migration explicitly grants table reads and approved RPC execution to authenticated sessions, including anonymous guest sessions. No direct table writes are granted.
 4. In **Authentication → Sign In / Providers**, enable email and **anonymous sign-ins**. Anonymous Auth is how invited guests receive a real user ID without creating a permanent account. Without it, guests cannot join.

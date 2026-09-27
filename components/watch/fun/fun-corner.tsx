@@ -76,7 +76,11 @@ export function FunCorner({
             !loaded ||
             busy ||
             !buddy ||
-            !!(state.round && !state.round.answers)
+            !!(
+              state.round &&
+              (!state.round.answers ||
+                (state.round.kind === "bingo" && !state.round.winner))
+            )
           }
           onClick={async () => {
             if (

@@ -73,3 +73,9 @@ Final follow-up run: lint, type checking, 6 unit/database tests, the production 
 The date-night release was confirmed READY on the production alias. All four panels were inspected in the live room. A real guest-session mood action saved to the hosted database, then a second same-session tab changed it back and the first tab updated without a reload. This verifies live shared-state propagation, not two independent people or physical device timing. The original violet mood was restored. No chat messages or private activity answers were sent.
 
 During the subsequent browser check, the official YouTube API script failed to load (including after the displayed Reload player action); the app rendered its connection/content-blocker error safely. The new date-night controls remained available. No date-night console errors were observed. Live video playback on this connection therefore remains unverified; investigate the network/content-blocker path if the failure persists on the users’ devices.
+
+## Movie Bingo replacement — 27 September 2026
+
+Replaced the card grid with pause-and-pick rounds and a room scoreboard. Lint, the production build, and all 8 database/unit tests passed. The expanded SQL test verifies private picks, invalid choices, outsider rejection, disagreement without points, both matching players scoring, skipped rounds and duplicate finalization rejection. All 10 date-night browser checks passed in Chromium and WebKit, including the new two-view agreement/scoring flow and the six requested widths. The tablet screenshot was visually reviewed. Browser fixtures use actual SQL but substitute the live transport; physical two-device play remains unverified.
+
+The movie_bingo migration was applied to the dedicated hosted project and its installed function and authenticated-only RPC grant were checked. Existing security-advisor findings retain the explanations above. No new environment variables or paid services are required.
