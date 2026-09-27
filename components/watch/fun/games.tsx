@@ -257,7 +257,7 @@ export function Games({
           </p>
         )}
         <p className="fun-help">
-          Answers stay hidden on the server until both selected people submit.
+          Your answers stay hidden until you both submit.
           Revealed answers are visible to this private room.
         </p>
       </form>

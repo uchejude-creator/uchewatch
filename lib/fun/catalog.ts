@@ -53,7 +53,7 @@ export const ACTIVITIES: {
     kind: "truths",
     title: "Two truths & a lie",
     emoji: "🤭",
-    description: "Trade three statements, then guess on FaceTime.",
+    description: "Trade three statements. Guess each other’s little lie.",
     prompt:
       "Write three numbered statements: two true, one a lie. Keep the lie secret until your person guesses.",
   },
