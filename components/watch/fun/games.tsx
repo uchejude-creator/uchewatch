@@ -17,7 +17,8 @@ export function Games({
   run: RunFun;
 }) {
   const [answer, setAnswer] = useState(""),
-    [lie, setLie] = useState("1");
+    [lie, setLie] = useState("");
+  const [statements, setStatements] = useState(["", "", ""]);
   const [kind, setKind] = useState<RoundKind>("compliment");
   const [custom, setCustom] = useState("");
   const round = state.round;
@@ -114,11 +115,21 @@ export function Games({
                   if (
                     await run("round_answer", {
                       id: round.id,
-                      text: round.kind === "ready" ? "Ready" : answer,
+                      text:
+                        round.kind === "ready"
+                          ? "Ready"
+                          : round.kind === "truths"
+                            ? statements
+                                .map((text, i) => `${i + 1}. ${text.trim()}`)
+                                .join("\n")
+                            : answer,
                       lie,
                     })
-                  )
+                  ) {
                     setAnswer("");
+                    setStatements(["", "", ""]);
+                    setLie("");
+                  }
                 }}
               >
                 {round.kind === "ready" ? (
@@ -146,43 +157,91 @@ export function Games({
                   </div>
                 ) : (
                   <>
-                    <label htmlFor="secret-answer">Your private answer</label>
-                    <textarea
-                      id="secret-answer"
-                      rows={3}
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      maxLength={round.kind === "truths" ? 240 : 300}
-                      placeholder={
-                        round.kind === "truths"
-                          ? "1. …\n2. …\n3. …"
-                          : "Just between the two of you, until the reveal…"
-                      }
-                      required
-                    />
-                    {round.kind === "truths" && (
+                    {round.kind === "truths" ? (
                       <>
+                        <p className="fun-help">
+                          Write one statement in each box: two true things about
+                          you and one made-up thing. Then secretly choose the
+                          lie.
+                        </p>
+                        {statements.map((statement, i) => (
+                          <div className="fun-form" key={i}>
+                            <label htmlFor={`truth-statement-${i}`}>
+                              Statement {i + 1}
+                            </label>
+                            <input
+                              id={`truth-statement-${i}`}
+                              value={statement}
+                              maxLength={75}
+                              required
+                              placeholder={
+                                [
+                                  "For example: I have missed a flight",
+                                  "For example: I can swim",
+                                  "For example: I have met a famous singer",
+                                ][i]
+                              }
+                              onChange={(e) =>
+                                setStatements((previous) =>
+                                  previous.map((text, index) =>
+                                    index === i ? e.target.value : text,
+                                  ),
+                                )
+                              }
+                            />
+                          </div>
+                        ))}
                         <label htmlFor="lie-number">
                           Which statement is your lie? (kept secret)
                         </label>
                         <select
                           id="lie-number"
                           value={lie}
+                          required
                           onChange={(e) => setLie(e.target.value)}
                         >
+                          <option value="" disabled>
+                            Choose your made-up statement
+                          </option>
                           {[1, 2, 3].map((n) => (
                             <option key={n} value={n}>
                               Statement {n}
                             </option>
                           ))}
                         </select>
+                        <p className="fun-help">
+                          After you both submit, read each other’s statements
+                          and guess the lie. The correct answers reveal after
+                          both guesses.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <label htmlFor="secret-answer">
+                          Your private answer
+                        </label>
+                        <textarea
+                          id="secret-answer"
+                          rows={3}
+                          value={answer}
+                          onChange={(e) => setAnswer(e.target.value)}
+                          maxLength={300}
+                          placeholder="Just between the two of you, until the reveal…"
+                          required
+                        />
                       </>
                     )}
                     <button
                       className="button button-primary"
-                      disabled={!answer.trim()}
+                      disabled={
+                        round.kind === "truths"
+                          ? statements.some((text) => !text.trim()) || !lie
+                          : !answer.trim()
+                      }
                     >
-                      Lock in my answer
+                      {round.kind === "truths"
+                        ? "Lock in my three statements"
+                        : "Lock in my answer"}
                     </button>
                   </>
                 )}
@@ -230,6 +289,8 @@ export function Games({
         onSubmit={async (e) => {
           e.preventDefault();
           setAnswer("");
+          setStatements(["", "", ""]);
+          setLie("");
           await run("round_start", {
             kind,
             other: buddy,
@@ -237,14 +298,24 @@ export function Games({
           });
         }}
       >
-        <label htmlFor="activity-prompt">Tonight’s question</label>
-        <input
-          id="activity-prompt"
-          value={custom}
-          onChange={(e) => setCustom(e.target.value)}
-          maxLength={180}
-          placeholder={selected.prompt}
-        />
+        {kind === "truths" ? (
+          <p className="fun-help">
+            Each of you writes three statements about yourself: two truths and
+            one lie. Start the game to open your three boxes, then see if you
+            can fool each other.
+          </p>
+        ) : (
+          <>
+            <label htmlFor="activity-prompt">Tonight’s question</label>
+            <input
+              id="activity-prompt"
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              maxLength={180}
+              placeholder={selected.prompt}
+            />
+          </>
+        )}
         <button
           className="button button-primary"
           disabled={!buddy || !!(round && !round.answers)}
@@ -257,8 +328,8 @@ export function Games({
           </p>
         )}
         <p className="fun-help">
-          Your answers stay hidden until you both submit.
-          Revealed answers are visible to this private room.
+          Your answers stay hidden until you both submit. Revealed answers are
+          visible to this private room.
         </p>
       </form>
       <section aria-label="Movie bingo">

@@ -75,14 +75,12 @@ async function setup(page: Page) {
     .route("**/__test__/fun-bundle.js", (r) =>
       r.fulfill({ contentType: "text/javascript", body: bundle }),
     );
-  await page
-    .context()
-    .route("**/__test__/fun?*", (r) =>
-      r.fulfill({
-        contentType: "text/html",
-        body: `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">${styles.map((h) => `<link rel="stylesheet" href="${h}">`).join("")}<div id="root"></div><script src="/__test__/fun-bundle.js"></script>`,
-      }),
-    );
+  await page.context().route("**/__test__/fun?*", (r) =>
+    r.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">${styles.map((h) => `<link rel="stylesheet" href="${h}">`).join("")}<div id="root"></div><script src="/__test__/fun-bundle.js"></script>`,
+    }),
+  );
   await page.goto(`/__test__/fun?user=${host}`);
   const other = await page.context().newPage();
   await other.goto(`/__test__/fun?user=${guest}`);
@@ -207,6 +205,62 @@ test("The corner fits each requested width and playlist dedications reach both p
     await expect(other.locator(".playlist-pick")).toContainText(
       "It always makes me think of you",
     );
+  } finally {
+    await close();
+  }
+});
+
+test("Two truths uses three fields and reveals lies only after both guesses", async ({
+  page,
+}) => {
+  const { other, close } = await setup(page);
+  try {
+    for (const view of [page, other])
+      await view
+        .getByRole("button", { name: "Play together", exact: true })
+        .click();
+    await page
+      .getByRole("button", { name: /Two truths & a lie Trade/ })
+      .click();
+    await expect(page.getByLabel("Tonight’s question")).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "Start two truths & a lie", exact: true })
+      .click();
+    for (const [index, view] of [page, other].entries()) {
+      const submit = view.getByRole("button", {
+        name: "Lock in my three statements",
+      });
+      await view
+        .getByLabel("Statement 1", { exact: true })
+        .fill(`I swim ${index}`);
+      await expect(submit).toBeDisabled();
+      await view
+        .getByLabel("Statement 2", { exact: true })
+        .fill(`I fly ${index}`);
+      await view
+        .getByLabel("Statement 3", { exact: true })
+        .fill(`I cook ${index}`);
+      await expect(submit).toBeDisabled();
+      await view
+        .getByLabel("Which statement is your lie? (kept secret)")
+        .selectOption("2");
+      await submit.click();
+      if (index === 0)
+        await expect(other.locator(".answer-reveal")).toHaveCount(0);
+    }
+    await expect(page.locator(".answer-reveal")).toContainText("3. I cook 1");
+    await page
+      .getByRole("button", { name: "Statement 2", exact: true })
+      .click();
+    await expect(
+      other.getByText("Statement 2 was the lie.", { exact: true }),
+    ).toHaveCount(0);
+    await other
+      .getByRole("button", { name: "Statement 2", exact: true })
+      .click();
+    await expect(
+      page.getByText("Statement 2 was the lie.", { exact: true }),
+    ).toHaveCount(2);
   } finally {
     await close();
   }
