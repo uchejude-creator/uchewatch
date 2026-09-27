@@ -3348,3 +3348,37 @@ button:active,
     transition: none;
   }
 }
+
+/* A continuous player: only the surrounding layout moves, never the iframe. */
+.viewing-layout { grid-template-columns: minmax(0, 1fr) minmax(340px, 420px); }
+.viewing-layout > .watch-column { position: sticky; top: 16px; align-self: start; }
+.watch-screen-slot { position: relative; }
+.screen-sentinel { position: absolute; top: 0; width: 1px; height: 1px; pointer-events: none; }
+.watch-screen { background: #0b0b10; border-radius: 14px; }
+.viewing-layout .room-companion { min-width: 0; max-height: calc(100dvh - 190px); overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; scrollbar-color: #766087 #111118; padding: 2px 8px 16px 2px; scroll-padding-block: 16px; }
+.room-companion > .social-panel { margin-top: 20px; min-height: 420px; height: 520px; }
+.viewing-layout .player-frame { min-height: 0; max-height: calc(100dvh - 310px); }
+.viewing-layout .room-companion .fun-tabs { flex-wrap: wrap; }
+.cinema-mode .viewing-layout { grid-template-columns: 1fr; }
+.cinema-mode .viewing-layout > .watch-column { position: static; }
+.cinema-mode .viewing-layout .room-companion { max-height: none; overflow: visible; }
+.cinema-mode .viewing-layout .player-frame { max-height: calc(100svh - 180px); }
+@media (max-width: 1100px) {
+  .viewing-layout { display: block; }
+  .viewing-layout > .watch-column { position: static; }
+  .viewing-layout .room-companion { max-height: none; overflow: visible; padding: 0; }
+  .viewing-layout .player-frame { max-height: none; min-height: 205px; }
+  .screen-pinned { height: var(--screen-slot-height); }
+  .screen-pinned .watch-screen { position: fixed; top: 0; left: 0; right: 0; z-index: 25; border-radius: 0 0 16px 16px; padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); box-shadow: 0 12px 30px #0009; }
+  .screen-pinned .player-frame { height: min(28svh, calc((100vw - 20px) * 9 / 16)); min-height: 0; aspect-ratio: auto; border-radius: 0; box-shadow: none; }
+  .screen-pinned .player-toolbar { margin: 0; padding-block: 4px; min-height: 52px; }
+  .screen-pinned .watch-screen > .room-footer-note { display: none; }
+  .screen-pinned .notice { margin: 0; padding: 6px 10px; }
+  .screen-pinned .notice p, .screen-pinned .notice strong { display: none; }
+  .room-companion :is(button, input, textarea, select, [tabindex]) { scroll-margin-top: calc(28svh + 110px + env(safe-area-inset-top)); }
+  .room-companion > .social-panel { height: 480px; }
+}
+@media (max-height: 550px) and (min-width: 1101px) {
+  .viewing-layout .room-companion { max-height: calc(100dvh - 100px); }
+  .viewing-layout .player-frame { max-height: calc(100dvh - 180px); }
+}

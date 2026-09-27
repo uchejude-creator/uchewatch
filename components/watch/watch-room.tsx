@@ -17,6 +17,7 @@ import {
 import { Brand } from "@/components/ui/brand";
 import { Modal } from "@/components/ui/modal";
 import { ReactionPicker } from "./reaction-picker";
+import { WatchLayout } from "./watch-layout";
 import { VideoPlayer } from "./video-player";
 import { SocialPanel } from "./social-panel";
 import { InviteModal } from "./invite-modal";
@@ -156,97 +157,118 @@ export function WatchRoom({
             </button>
           </div>
         )}
-        <div className="room-layout">
-          <div className="watch-column">
-            <VideoPlayer
-              key={state.room.video_id}
-              room={state.room}
-              offset={state.offset}
-              connected={connected}
-              reactions={state.reactions}
-              onPlayback={state.playback}
-              onCinema={() => setCinema(!cinema)}
-              overlay={
-                <FunOverlays
-                  state={fun.state}
-                  offset={state.offset}
-                  name={personName}
-                  startsAt={
-                    state.room.is_playing
-                      ? state.room.playback_updated_at
-                      : undefined
-                  }
-                />
-              }
-            />
-            <div className="room-video-info">
-              <div>
-                <h2>The same screen. A little closer.</h2>
-                <p>YouTube · Everyone can play, pause, and seek.</p>
-              </div>
-              {host && (
-                <button className="text-button" onClick={() => setChange(true)}>
-                  Change video ↗
-                </button>
-              )}
-            </div>
-            <ReactionPicker connected={connected} onReact={state.react} />
-            <FunCorner
-              state={fun.state}
-              act={fun.act}
-              busy={fun.busy}
-              loaded={fun.loaded}
-              error={fun.error}
-              connected={connected}
-              people={state.people}
-              userId={userId}
-              host={host}
-              name={personName}
-            />
-            {connected && state.people.length < 2 && (
-              <div className="waiting-card">
-                <Heart size={23} />
+        <WatchLayout
+          cinema={cinema}
+          video={
+            <>
+              <VideoPlayer
+                key={state.room.video_id}
+                room={state.room}
+                offset={state.offset}
+                connected={connected}
+                reactions={state.reactions}
+                onPlayback={state.playback}
+                onCinema={() => setCinema(!cinema)}
+                overlay={
+                  <FunOverlays
+                    state={fun.state}
+                    offset={state.offset}
+                    name={personName}
+                    startsAt={
+                      state.room.is_playing
+                        ? state.room.playback_updated_at
+                        : undefined
+                    }
+                  />
+                }
+              />
+            </>
+          }
+          info={
+            <>
+              <div className="room-video-info">
                 <div>
-                  <h3>Waiting for your person…</h3>
-                  <p>Share an invitation. Their seat is ready when they are.</p>
+                  <h2>The same screen. A little closer.</h2>
+                  <p>YouTube · Everyone can play, pause, and seek.</p>
                 </div>
-                <button className="text-button" onClick={() => setInvite(true)}>
-                  Send an invite →
-                </button>
+                {host && (
+                  <button
+                    className="text-button"
+                    onClick={() => setChange(true)}
+                  >
+                    Change video ↗
+                  </button>
+                )}
               </div>
-            )}
-            <div className="room-footer-note">
-              <LockKeyhole size={11} /> A private space for shared moments.
-              {host && (
-                <button
-                  className="text-button"
-                  style={{ marginLeft: "auto", fontSize: 10 }}
-                  onClick={() => setEnd(true)}
-                >
-                  End room
-                </button>
+            </>
+          }
+          activities={
+            <>
+              <ReactionPicker connected={connected} onReact={state.react} />
+              <FunCorner
+                state={fun.state}
+                act={fun.act}
+                busy={fun.busy}
+                loaded={fun.loaded}
+                error={fun.error}
+                connected={connected}
+                people={state.people}
+                userId={userId}
+                host={host}
+                name={personName}
+              />
+              {connected && state.people.length < 2 && (
+                <div className="waiting-card">
+                  <Heart size={23} />
+                  <div>
+                    <h3>Waiting for your person…</h3>
+                    <p>
+                      Share an invitation. Their seat is ready when they are.
+                    </p>
+                  </div>
+                  <button
+                    className="text-button"
+                    onClick={() => setInvite(true)}
+                  >
+                    Send an invite →
+                  </button>
+                </div>
               )}
-            </div>
-          </div>
-          <SocialPanel
-            messages={state.messages.map((m) => ({
-              ...m,
-              display_name: fun.state.aliases[m.user_id] || m.display_name,
-            }))}
-            people={state.people.map((p) => ({
-              ...p,
-              display_name:
-                personName(p.user_id) +
-                (fun.state.statuses[p.user_id] === "snacks"
-                  ? " · 🍪 snack break"
-                  : ""),
-            }))}
-            userId={userId}
-            hostId={state.room.host_user_id}
-            connected={connected}
-            onSend={state.sendMessage}
-          />
-        </div>
+              <div className="room-footer-note">
+                <LockKeyhole size={11} /> A private space for shared moments.
+                {host && (
+                  <button
+                    className="text-button"
+                    style={{ marginLeft: "auto", fontSize: 10 }}
+                    onClick={() => setEnd(true)}
+                  >
+                    End room
+                  </button>
+                )}
+              </div>
+            </>
+          }
+          social={
+            <SocialPanel
+              messages={state.messages.map((m) => ({
+                ...m,
+                display_name: fun.state.aliases[m.user_id] || m.display_name,
+              }))}
+              people={state.people.map((p) => ({
+                ...p,
+                display_name:
+                  personName(p.user_id) +
+                  (fun.state.statuses[p.user_id] === "snacks"
+                    ? " · 🍪 snack break"
+                    : ""),
+              }))}
+              userId={userId}
+              hostId={state.room.host_user_id}
+              connected={connected}
+              onSend={state.sendMessage}
+            />
+          }
+        />
       </main>
       {cinema && (
         <button

@@ -40,3 +40,7 @@ Before relying on a date night, run both devices through love burst, ready count
 Movie Bingo replaces the old grid. “Pause & pick” pauses the shared video and starts a round for the selected pair. Both secretly choose Romantic, Funny, Sad, Shocking, or Tense. Once both picks reveal, each accepts a winning description. Only matching acceptances finalize the round; each original pick matching that answer earns one point. Votes can change while players disagree. Skip cancels without points. Totals stay with the room, including across refreshes. Playback stays paused until a participant presses play.
 
 Apply `20260927102144_movie_bingo.sql` after the date-night migration. It replaces the validated action function, reuses private answers and room locks, and calculates points only once per finalized round. Clients cannot supply score totals. Legacy card data is retained for compatibility but the card UI is removed.
+
+## Watching while you play
+
+On wide desktop windows, the video stays on the left while the games and conversation column scrolls independently on the right. At widths up to 1100px, scrolling past the video pins a compact player and its playback controls to the top. Returning to the video restores its full size. The same iframe remains mounted throughout, preserving player state. Cinema mode retains its larger viewing layout.
